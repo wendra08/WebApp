@@ -179,20 +179,18 @@ if st.button("Run Code"):
             sys.stdout = sys.__stdout__
 
     elif language == "JavaScript":
-        with tempfile.NamedTemporaryFile(suffix=".js", delete=False) as temp_file:
-            temp_file.write(code.encode())  # Simpan kode JavaScript
-            temp_file_path = temp_file.name
+        # Save the JavaScript code to a temporary file
+        with open("temp.js", "w") as js_file:
+            js_file.write(code)
 
         try:
-            # Jalankan file menggunakan Node.js
-            result = subprocess.check_output(["node", temp_file_path], stderr=subprocess.STDOUT, text=True)
+            # Run the JavaScript code using Node.js
+            result = subprocess.check_output(["node", "temp.js"], stderr=subprocess.STDOUT, text=True)
             st.success("Code executed successfully!")
-            st.text_area("Output", value=result, height=200, disabled=True)
+            st.text_area("Output", value=result, height=200, disabled=True) 
         except subprocess.CalledProcessError as e:
             st.error("An error occurred!")
             st.text_area("Error", value=e.output, height=200, disabled=True)
-        finally:
-            os.unlink(temp_file_path)  # Hapus file sementara
     
     elif language == "Lua":
         lua_path = r"C:\Program Files (x86)\Lua\5.1\lua.exe" 
