@@ -121,4 +121,88 @@ code = st_ace(
     font_size=18
 )
 
-# Rest of the code remains the same...
+
+# Button to run the code
+if st.button("Run Code"):
+    # Check the answer
+    if not code.strip():
+        st.warning("Editor still empty")
+    else:
+        prompt = f"""
+            I want you to act as a code reviewer. The programming language used is {language}.  
+        Here is the code written by the user:
+
+        ```{language.lower()}
+        {code}
+        ```
+
+        Your task:
+        1. Check for syntax or logic errors.
+        2. Give a brief explanation if there are any problems.
+        3. If there are no problems, notify that the code is correct.
+        4. Suggest improvements or optimizations if any.
+
+        Write the answers in a friendly style that is easy for the learner to understand.
+        """
+
+        with st.spinner("Checking your code..."):
+            correction = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.6,
+                top_p=0.95,
+                stream=False,
+                stop=None,
+            )
+            st.subheader("Feedback Your Code")
+            st.write(correction.choices[0].message.content)
+
+    # Only execute Python code
+    if language == "Python":
+        # Redirect stdout to capture print statements
+        output = io.StringIO()
+        sys.stdout = output
+
+        try:
+            # Execute the user's code
+            exec(code)
+            result = output.getvalue()  # Get the output
+            st.success("Code executed successfully!")
+            st.text_area("Output", value=result, height=200, disabled=True)
+        except Exception as e:
+            # Handle errors
+            st.error("An error occurred!")
+            st.text_area("Error", value=str(e), height=200, disabled=True)
+        finally:
+            # Reset stdout
+            sys.stdout = sys.__stdout__
+
+    elif language == "JavaScript":
+        # Save the JavaScript code to a temporary file
+        with open("temp.js", "w") as js_file:
+            js_file.write(code)
+
+        try:
+            # Run the JavaScript code using Node.js
+            result = subprocess.check_output(["node", "temp.js"], stderr=subprocess.STDOUT, text=True)
+            st.success("Code executed successfully!")
+            st.text_area("Output", value=result, height=200, disabled=True) 
+        except subprocess.CalledProcessError as e:
+            st.error("An error occurred!")
+            st.text_area("Error", value=e.output, height=200, disabled=True)
+    
+    elif language == "Lua":
+        lua_path = r"C:\Program Files (x86)\Lua\5.1\lua.exe" 
+    
+        with open("temp.lua", "w") as lua_file:
+            lua_file.write(code)
+
+        try:
+            result = subprocess.check_output([lua_path, "temp.lua"], stderr=subprocess.STDOUT, text=True)
+            st.success("Code executed successfully!")
+            st.text_area("Output", value=result, height=200, disabled=True)
+        except subprocess.CalledProcessError as e:
+            st.error("An error occurred!")
+            st.text_area("Error", value=e.output, height=200, disabled=True)
+    else:
+        st.error("Code execution is only supported for Python at this time.")
