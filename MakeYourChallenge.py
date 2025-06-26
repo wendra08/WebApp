@@ -5,6 +5,7 @@ import subprocess
 import sys
 import io
 from streamlit_ace import st_ace
+import tempfile
 
 # Get API key from secrets
 api_key = st.secrets["API_KEY"]
@@ -178,19 +179,23 @@ if st.button("Run Code"):
             sys.stdout = sys.__stdout__
 
     elif language == "JavaScript":
-        # Save the JavaScript code to a temporary file
-        with open("temp.js", "w") as js_file:
-            js_file.write(code)
+       # Simpan JavaScript code ke file sementara
+        with tempfile.NamedTemporaryFile(suffix=".js", delete=False) as temp_file:
+            temp_file.write(code.encode())  # Simpan kode dalam format byte
+            temp_file_path = temp_file.name
 
         try:
-            # Run the JavaScript code using Node.js
-            result = subprocess.check_output(["node", "temp.js"], stderr=subprocess.STDOUT, text=True)
+            # Jalankan file JavaScript menggunakan Node.js
+            result = subprocess.check_output(["node", temp_file_path], stderr=subprocess.STDOUT, text=True)
             st.success("Code executed successfully!")
-            st.text_area("Output", value=result, height=200, disabled=True) 
+            st.text_area("Output", value=result, height=200, disabled=True)
         except subprocess.CalledProcessError as e:
             st.error("An error occurred!")
             st.text_area("Error", value=e.output, height=200, disabled=True)
-    
+        finally:
+            # Hapus file sementara
+            os.unlink(temp_file_path)
+
     elif language == "Lua":
         lua_path = r"C:\Program Files (x86)\Lua\5.1\lua.exe" 
     

@@ -1,1 +1,1 @@
-console.log("rina rina rina")
+console.log("Aku ayam")
