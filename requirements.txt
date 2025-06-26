@@ -2,4 +2,3 @@ streamlit
 python-dotenv
 groq
 streamlit-ace
-tempfile
